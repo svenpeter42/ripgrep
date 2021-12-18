@@ -284,6 +284,12 @@ impl<'a> PrinterPath<'a> {
         PrinterPath(Vec::from_path_lossy(path))
     }
 
+    /// Create a new path suitable from printing from a slice. This is
+    /// used to create a printer for stdin.
+    pub fn from_slice(path: &[u8]) -> PrinterPath<'a> {
+        PrinterPath(Cow::Owned(Vec::from_slice(path)))
+    }
+
     /// Create a new printer path from the given path which can be efficiently
     /// written to a writer without allocation.
     ///
