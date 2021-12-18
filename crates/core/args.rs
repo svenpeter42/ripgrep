@@ -790,7 +790,8 @@ impl ArgMatches {
             .separator_field_match(self.field_match_separator())
             .separator_field_context(self.field_context_separator())
             .separator_path(self.path_separator()?)
-            .path_terminator(self.path_terminator());
+            .path_terminator(self.path_terminator())
+            .stdin_label(self.stdin_label());
         if separator_search {
             builder.separator_search(self.file_separator()?);
         }
@@ -817,7 +818,8 @@ impl ArgMatches {
             .exclude_zero(!self.is_present("include-zero"))
             .separator_field(b":".to_vec())
             .separator_path(self.path_separator()?)
-            .path_terminator(self.path_terminator());
+            .path_terminator(self.path_terminator())
+            .stdin_label(self.stdin_label());
         Ok(builder.build(wtr))
     }
 
@@ -1375,6 +1377,17 @@ impl ArgMatches {
             Some(b'\x00')
         } else {
             None
+        }
+    }
+
+    /// Returns the label to be used when stdin is searched.
+    ///
+    /// This label is used instead of the filename when -H or -l
+    /// is set. By default <stdin> is used.
+    fn stdin_label(&self) -> Vec<u8> {
+        match self.value_of_os("label") {
+            None => b"<stdin>".to_vec(),
+            Some(label) => cli::unescape_os(&label),
         }
     }
 

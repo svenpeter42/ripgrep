@@ -644,6 +644,7 @@ pub fn all_args_and_flags() -> Vec<RGArg> {
     flag_vimgrep(&mut args);
     flag_with_filename(&mut args);
     flag_word_regexp(&mut args);
+    flag_label(&mut args);
     args
 }
 
@@ -3087,6 +3088,20 @@ This flag overrides --with-filename.
         .help(NO_SHORT)
         .long_help(NO_LONG)
         .overrides("with-filename");
+    args.push(arg);
+}
+
+fn flag_label(args: &mut Vec<RGArg>) {
+    const SHORT: &str = "Label to be used in place of \"<STDIN\">.";
+    const LONG: &str = long!(
+        "\
+Label to be used in place of \"<stdin>\" when a filename would normally
+be printed but stdin is searched.
+
+This can be used with both -H/--with-filename and -l/--files-with-matches
+"
+    );
+    let arg = RGArg::flag("label", "LABEL").help(SHORT).long_help(LONG);
     args.push(arg);
 }
 
