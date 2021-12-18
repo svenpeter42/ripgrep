@@ -48,6 +48,7 @@ struct Config {
     separator_field_context: Arc<Vec<u8>>,
     separator_path: Option<u8>,
     path_terminator: Option<u8>,
+    stdin_label: Arc<Vec<u8>>,
 }
 
 impl Default for Config {
@@ -73,6 +74,7 @@ impl Default for Config {
             separator_field_context: Arc::new(b"-".to_vec()),
             separator_path: None,
             path_terminator: None,
+            stdin_label: Arc::new(b"<stdin>".to_vec()),
         }
     }
 }
@@ -448,6 +450,15 @@ impl StandardBuilder {
         self.config.path_terminator = terminator;
         self
     }
+
+    /// Set the stdin label to be used.
+    ///
+    /// The stdin label is used in place of the filename whenever stdin
+    /// is searched instead. By default, <stdin> is used.
+    pub fn stdin_label(&mut self, sep: Vec<u8>) -> &mut StandardBuilder {
+        self.config.stdin_label = Arc::new(sep);
+        self
+    }
 }
 
 /// The standard printer, which implements grep-like formatting, including
@@ -536,10 +547,14 @@ impl<W: WriteColor> Standard<W> {
             return self.sink(matcher);
         }
         let stats = if self.config.stats { Some(Stats::new()) } else { None };
-        let ppath = PrinterPath::with_separator(
-            path.as_ref(),
-            self.config.separator_path,
-        );
+        let ppath = if path.as_ref() == Path::new("<stdin>") {
+            PrinterPath::from_slice(self.config.stdin_label.as_ref())
+        } else {
+            PrinterPath::with_separator(
+                path.as_ref(),
+                self.config.separator_path,
+            )
+        };
         let needs_match_granularity = self.needs_match_granularity();
         StandardSink {
             matcher: matcher,
