@@ -29,6 +29,7 @@ struct Config {
     separator_field: Arc<Vec<u8>>,
     separator_path: Option<u8>,
     path_terminator: Option<u8>,
+    stdin_label: Arc<Vec<u8>>,
 }
 
 impl Default for Config {
@@ -43,6 +44,7 @@ impl Default for Config {
             separator_field: Arc::new(b":".to_vec()),
             separator_path: None,
             path_terminator: None,
+            stdin_label: Arc::new(b"<stdin>".to_vec()),
         }
     }
 }
@@ -310,6 +312,15 @@ impl SummaryBuilder {
         self.config.path_terminator = terminator;
         self
     }
+
+    /// Set the stdin label to be used.
+    ///
+    /// The stdin label is used in place of the filename whenever stdin
+    /// is searched instead. By default, <stdin> is used.
+    pub fn stdin_label(&mut self, sep: Vec<u8>) -> &mut SummaryBuilder {
+        self.config.stdin_label = Arc::new(sep);
+        self
+    }
 }
 
 /// The summary printer, which emits aggregate results from a search.
@@ -407,10 +418,14 @@ impl<W: WriteColor> Summary<W> {
         } else {
             None
         };
-        let ppath = PrinterPath::with_separator(
-            path.as_ref(),
-            self.config.separator_path,
-        );
+        let ppath = if path.as_ref() == Path::new("<stdin>") {
+            PrinterPath::from_slice(self.config.stdin_label.as_ref())
+        } else {
+            PrinterPath::with_separator(
+                path.as_ref(),
+                self.config.separator_path,
+            )
+        };
         SummarySink {
             matcher: matcher,
             summary: self,
